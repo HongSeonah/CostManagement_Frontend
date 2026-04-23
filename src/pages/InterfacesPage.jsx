@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiDelete, apiGet, apiPost, apiPut } from '../lib/api'
+import { apiDelete, apiGet, apiPost, apiPut, getApiErrorMessage } from '../lib/api'
 import { PageHeader } from '../components/PageHeader'
 
 const interfaceDefaults = {
@@ -163,6 +163,9 @@ export function InterfacesPage() {
       await queryClient.invalidateQueries({ queryKey: ['interface-protocol-config', selectedId] })
       setFeedback({ text: '인터페이스 상태를 변경했어요.', tone: 'success' })
     },
+    onError: (error) => {
+      setFeedback({ text: getApiErrorMessage(error, '인터페이스 상태 변경에 실패했어요.'), tone: 'error' })
+    },
   })
 
   const deleteMutation = useMutation({
@@ -175,6 +178,9 @@ export function InterfacesPage() {
       setSelectedId(null)
       setForm(interfaceDefaults)
       resetConnectionTest()
+    },
+    onError: (error) => {
+      setFeedback({ text: getApiErrorMessage(error, '연동 삭제에 실패했어요.'), tone: 'error' })
     },
   })
 
@@ -192,7 +198,7 @@ export function InterfacesPage() {
     onError: (error) => {
       setConnectionVerified(false)
       setConnectionTest({
-        text: error?.response?.data?.message ?? '연결 확인에 실패했어요.',
+        text: getApiErrorMessage(error, '연결 확인에 실패했어요.'),
         tone: 'error',
         responseBody: '',
       })
@@ -303,7 +309,7 @@ export function InterfacesPage() {
       await queryClient.invalidateQueries({ queryKey: ['interface-protocol-config', savedInterface.id] })
     } catch (error) {
       setFeedback({
-        text: error?.response?.data?.message ?? '저장에 실패했어요.',
+        text: getApiErrorMessage(error, '저장에 실패했어요.'),
         tone: 'error',
       })
     }

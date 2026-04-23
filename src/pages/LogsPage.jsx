@@ -124,7 +124,7 @@ export function LogsPage() {
                 <col className="logs-col-step" />
                 <col className="logs-col-level" />
                 <col className="logs-col-time" />
-                <col />
+                <col className="logs-col-message" />
               </colgroup>
               <thead>
                 <tr>

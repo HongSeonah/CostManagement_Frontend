@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiGet, apiPost, apiPut } from '../lib/api'
+import { apiGet, apiPost, apiPut, getApiErrorMessage } from '../lib/api'
 import { PageHeader } from '../components/PageHeader'
 import {
   DAY_OF_MONTH_OPTIONS,
@@ -43,7 +43,7 @@ export function SchedulesPage() {
   const [selectedIds, setSelectedIds] = useState([])
   const [form, setForm] = useState(defaultForm)
   const [scheduleConfig, setScheduleConfig] = useState(defaultScheduleConfig)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState({ text: '', tone: 'success' })
 
   const interfacesQuery = useQuery({
     queryKey: ['interfaces', 'all-for-schedules'],
@@ -81,22 +81,28 @@ export function SchedulesPage() {
   const createMutation = useMutation({
     mutationFn: ({ interfaceId: id, body }) => apiPost(`/api/interfaces/${id}/schedules`, body),
     onSuccess: async () => {
-      setMessage('스케줄을 등록했어요.')
+      setMessage({ text: '스케줄을 등록했어요.', tone: 'success' })
       setForm(defaultForm)
       setEditingId(null)
       setScheduleConfig(defaultScheduleConfig)
       await queryClient.invalidateQueries({ queryKey: ['schedules'] })
+    },
+    onError: (error) => {
+      setMessage({ text: getApiErrorMessage(error, '스케줄 등록에 실패했어요.'), tone: 'error' })
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, body }) => apiPut(`/api/schedules/${id}`, body),
     onSuccess: async () => {
-      setMessage('스케줄을 수정했어요.')
+      setMessage({ text: '스케줄을 수정했어요.', tone: 'success' })
       setForm(defaultForm)
       setEditingId(null)
       setScheduleConfig(defaultScheduleConfig)
       await queryClient.invalidateQueries({ queryKey: ['schedules'] })
+    },
+    onError: (error) => {
+      setMessage({ text: getApiErrorMessage(error, '스케줄 수정에 실패했어요.'), tone: 'error' })
     },
   })
 
@@ -116,18 +122,21 @@ export function SchedulesPage() {
         START: '사용 시작',
         STOP: '사용 중지',
       }
-      setMessage(`${labels[variables.action]}을 요청했어요.`)
+      setMessage({ text: `${labels[variables.action]}을 요청했어요.`, tone: 'success' })
       setSelectedIds([])
       await queryClient.invalidateQueries({ queryKey: ['schedules'] })
       await queryClient.invalidateQueries({ queryKey: ['executions'] })
+    },
+    onError: (error) => {
+      setMessage({ text: getApiErrorMessage(error, '스케줄 작업에 실패했어요.'), tone: 'error' })
     },
   })
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    setMessage('')
+    setMessage({ text: '', tone: 'success' })
     if (!editingId && !form.interfaceId) {
-      setMessage('스케줄할 연동을 선택해 주세요.')
+      setMessage({ text: '스케줄할 연동을 선택해 주세요.', tone: 'error' })
       return
     }
     const body = {
@@ -338,10 +347,11 @@ export function SchedulesPage() {
           </div>
 
           <form className="panel form-panel" onSubmit={handleSubmit}>
-              <div className="panel-heading">
+            <div className="panel-heading">
               <h3>{editingId ? '스케줄 수정' : '스케줄 만들기'}</h3>
-              {message ? <span>{message}</span> : null}
             </div>
+
+            {message.text ? <div className={`form-feedback ${message.tone}`}>{message.text}</div> : null}
 
             <div className="form-grid">
               <label className="field field-equal">

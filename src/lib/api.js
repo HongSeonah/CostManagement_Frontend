@@ -54,3 +54,7 @@ export async function apiPatch(path, body, config) {
   const response = await api.patch(path, body, config)
   return response.data?.data
 }
+
+export function getApiErrorMessage(error, fallback = '요청에 실패했어요.') {
+  return error?.response?.data?.message ?? fallback
+}

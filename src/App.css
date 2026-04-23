@@ -430,7 +430,7 @@ table {
 }
 
 .logs-table {
-  min-width: 880px;
+  min-width: 980px;
 }
 
 .logs-table {
@@ -469,13 +469,29 @@ table {
 }
 
 .logs-col-time {
-  width: 160px;
+  width: 180px;
+}
+
+.logs-col-message {
+  width: 360px;
 }
 
 .logs-table th:nth-child(4),
 .logs-table td:nth-child(4) {
   width: 132px;
   text-align: center;
+}
+
+.logs-table th:nth-child(5),
+.logs-table td:nth-child(5) {
+  width: 180px;
+  white-space: nowrap;
+}
+
+.logs-table th:nth-child(6),
+.logs-table td:nth-child(6) {
+  width: auto;
+  overflow-wrap: break-word;
 }
 
 .logs-table th:nth-child(-n + 5),

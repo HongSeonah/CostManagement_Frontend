@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiGet, apiPost } from '../lib/api'
+import { apiGet, apiPost, getApiErrorMessage } from '../lib/api'
 import { PageHeader } from '../components/PageHeader'
 
 const executionDefaults = {
@@ -124,6 +124,9 @@ export function ExecutionsPage() {
       await queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] })
       await queryClient.invalidateQueries({ queryKey: ['dashboard-failures'] })
     },
+    onError: (error) => {
+      setExecuteMessage(getApiErrorMessage(error, '실행 요청에 실패했어요.'))
+    },
   })
 
   const retryMutation = useMutation({
@@ -133,6 +136,9 @@ export function ExecutionsPage() {
       await queryClient.invalidateQueries({ queryKey: ['executions'] })
       await queryClient.invalidateQueries({ queryKey: ['execution-detail'] })
       await queryClient.invalidateQueries({ queryKey: ['logs'] })
+    },
+    onError: (error) => {
+      setRetryMessage(getApiErrorMessage(error, '다시 실행 요청에 실패했어요.'))
     },
   })
 

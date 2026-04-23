@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiGet, apiPost, apiPut } from '../lib/api'
+import { apiGet, apiPost, apiPut, getApiErrorMessage } from '../lib/api'
 import { PageHeader } from '../components/PageHeader'
 
 const defaultForm = {
@@ -25,7 +25,7 @@ export function SystemsPage() {
   const [page, setPage] = useState(0)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(defaultForm)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState({ text: '', tone: 'success' })
 
   const systemsQuery = useQuery({
     queryKey: ['systems', keyword, page],
@@ -41,26 +41,32 @@ export function SystemsPage() {
   const createMutation = useMutation({
     mutationFn: (body) => apiPost('/api/systems', body),
     onSuccess: async () => {
-      setMessage('시스템을 등록했어요.')
+      setMessage({ text: '시스템을 등록했어요.', tone: 'success' })
       setForm(defaultForm)
       setEditingId(null)
       await queryClient.invalidateQueries({ queryKey: ['systems'] })
+    },
+    onError: (error) => {
+      setMessage({ text: getApiErrorMessage(error, '시스템 등록에 실패했어요.'), tone: 'error' })
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, body }) => apiPut(`/api/systems/${id}`, body),
     onSuccess: async () => {
-      setMessage('시스템을 수정했어요.')
+      setMessage({ text: '시스템을 수정했어요.', tone: 'success' })
       setForm(defaultForm)
       setEditingId(null)
       await queryClient.invalidateQueries({ queryKey: ['systems'] })
+    },
+    onError: (error) => {
+      setMessage({ text: getApiErrorMessage(error, '시스템 수정에 실패했어요.'), tone: 'error' })
     },
   })
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    setMessage('')
+    setMessage({ text: '', tone: 'success' })
     if (editingId) {
       updateMutation.mutate({ id: editingId, body: form })
       return
@@ -176,10 +182,11 @@ export function SystemsPage() {
           </div>
 
           <form className="panel form-panel" onSubmit={handleSubmit}>
-              <div className="panel-heading">
-                <h3>{editingId ? '시스템 수정' : '시스템 등록'}</h3>
-                {message ? <span>{message}</span> : null}
-              </div>
+            <div className="panel-heading">
+              <h3>{editingId ? '시스템 수정' : '시스템 등록'}</h3>
+            </div>
+
+            {message.text ? <div className={`form-feedback ${message.tone}`}>{message.text}</div> : null}
 
             <div className="form-grid">
               <label className="field">
