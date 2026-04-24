@@ -359,6 +359,10 @@
   margin-top: 12px;
 }
 
+.allocation-status {
+  margin: -2px 0 14px;
+}
+
 .table-card {
   overflow: auto;
 }
@@ -421,6 +425,18 @@ textarea.text-input {
   gap: 10px;
   align-items: end;
   margin-bottom: 18px;
+}
+
+.allocation-toolbar {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.allocation-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
 }
 
 .button-row {

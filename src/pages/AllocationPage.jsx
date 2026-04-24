@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { apiGet, getApiErrorMessage } from '../lib/api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { apiDownload, apiGet, apiPost, getApiErrorMessage } from '../lib/api'
 import { PageHeader } from '../components/PageHeader'
 import { StatCard } from '../components/StatCard'
-import { formatCurrency, formatNumber, formatPercent } from '../lib/format'
+import { formatCurrency, formatDateTime, formatNumber, formatPercent } from '../lib/format'
 
 function getCurrentMonth() {
   return new Intl.DateTimeFormat('en-CA', {
@@ -14,8 +14,10 @@ function getCurrentMonth() {
 }
 
 export function AllocationPage() {
+  const queryClient = useQueryClient()
   const [monthInput, setMonthInput] = useState(getCurrentMonth())
   const [month, setMonth] = useState(getCurrentMonth())
+  const [message, setMessage] = useState({ text: '', tone: 'success' })
 
   const summaryQuery = useQuery({
     queryKey: ['allocation-summary', month],
@@ -24,6 +26,8 @@ export function AllocationPage() {
 
   const summary = summaryQuery.data ?? {
     month,
+    closed: false,
+    closedAt: null,
     businessUnitCount: 0,
     projectCount: 0,
     entryCount: 0,
@@ -38,6 +42,57 @@ export function AllocationPage() {
 
   const handleSearch = () => {
     setMonth(monthInput || getCurrentMonth())
+    setMessage({ text: '', tone: 'success' })
+  }
+
+  const closeMutation = useMutation({
+    mutationFn: (body) => apiPost('/api/allocation/close', body),
+    onSuccess: async (data) => {
+      setMessage({
+        text: data?.alreadyClosed ? '이미 마감된 월이에요.' : '월 마감을 확정했어요.',
+        tone: 'success',
+      })
+      await queryClient.invalidateQueries({ queryKey: ['allocation-summary', month] })
+    },
+    onError: (error) => {
+      setMessage({ text: getApiErrorMessage(error, '월 마감에 실패했어요.'), tone: 'error' })
+    },
+  })
+
+  const downloadMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiDownload('/api/allocation/export', { params: { month } })
+      const fileName = `cost-management-allocation-${month || getCurrentMonth()}.xlsx`
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    },
+    onSuccess: () => {
+      setMessage({ text: '엑셀 파일을 내려받았어요.', tone: 'success' })
+    },
+    onError: (error) => {
+      setMessage({ text: getApiErrorMessage(error, '엑셀 다운로드에 실패했어요.'), tone: 'error' })
+    },
+  })
+
+  const handleClose = () => {
+    if (summary.closed) {
+      setMessage({ text: '이미 마감된 월이에요.', tone: 'error' })
+      return
+    }
+    if (!window.confirm(`${month || getCurrentMonth()} 월을 마감 확정할까요?`)) {
+      return
+    }
+    setMessage({ text: '', tone: 'success' })
+    closeMutation.mutate({ month: month || getCurrentMonth() })
   }
 
   return (
@@ -47,7 +102,7 @@ export function AllocationPage() {
         description="이번 달 원가를 본부별로 배부하고 마감하는 화면입니다."
       />
 
-      <section className="toolbar panel">
+      <section className="toolbar panel allocation-toolbar">
         <label className="field inline-field">
           <span>조회 월</span>
           <input
@@ -57,10 +112,30 @@ export function AllocationPage() {
             onChange={(event) => setMonthInput(event.target.value)}
           />
         </label>
-        <button className="secondary-button" type="button" onClick={handleSearch}>
-          조회
-        </button>
+        <div className="allocation-toolbar-actions">
+          <button className="secondary-button" type="button" onClick={handleSearch}>
+            조회
+          </button>
+          <button
+            className="primary-button"
+            type="button"
+            onClick={handleClose}
+            disabled={summary.closed || closeMutation.isPending}
+          >
+            {summary.closed ? '마감 완료' : '마감 확정'}
+          </button>
+          <button
+            className="ghost-button"
+            type="button"
+            onClick={() => downloadMutation.mutate()}
+            disabled={downloadMutation.isPending}
+          >
+            엑셀 다운로드
+          </button>
+        </div>
       </section>
+
+      {message.text ? <div className={`form-feedback ${message.tone}`}>{message.text}</div> : null}
 
       {summaryQuery.isError ? (
         <div className="form-feedback error">
@@ -79,8 +154,16 @@ export function AllocationPage() {
         <article className="panel">
           <div className="panel-heading">
             <h3>배부 기준</h3>
-            <span>직접비 / 공통비 / 배부 비율</span>
+            <span className={`status-badge ${summary.closed ? 'status-closed' : 'status-success'}`}>
+              {summary.closed ? '마감 완료' : '마감 전'}
+            </span>
           </div>
+
+          <p className="field-help allocation-status">
+            {summary.closed
+              ? `마감 일시: ${formatDateTime(summary.closedAt)}`
+              : '마감 확정 후에는 해당 월에 원가를 더 이상 입력할 수 없습니다.'}
+          </p>
 
           <div className="allocation-notes">
             <div>

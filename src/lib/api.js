@@ -30,6 +30,13 @@ export async function apiDelete(path, config) {
   return response.data?.data
 }
 
+export async function apiDownload(path, config) {
+  return api.get(path, {
+    ...config,
+    responseType: 'blob',
+  })
+}
+
 export function getApiErrorMessage(error, fallback = '요청에 실패했어요.') {
   return error?.response?.data?.message ?? fallback
 }
