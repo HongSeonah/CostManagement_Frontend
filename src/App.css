@@ -79,6 +79,9 @@
   display: grid;
   gap: 10px;
   margin-top: 34px;
+  max-height: calc(100vh - 260px);
+  overflow: auto;
+  padding-right: 4px;
 }
 
 .nav-link {
@@ -218,6 +221,8 @@
   padding: 22px;
   display: grid;
   gap: 10px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .stat-card p,
@@ -228,8 +233,16 @@
 }
 
 .stat-card strong {
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  display: block;
+  max-width: 100%;
+  font-size: clamp(1.25rem, 2.2vw, 2.2rem);
+  line-height: 1.05;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
 }
 
 .stat-card.default {

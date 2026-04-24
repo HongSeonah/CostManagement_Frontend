@@ -4,8 +4,12 @@ const menus = [
   { to: '/dashboard', label: '대시보드' },
   { to: '/business-units', label: '본부 현황' },
   { to: '/projects', label: '프로젝트' },
+  { to: '/employees', label: '인력' },
   { to: '/cost-entries', label: '원가 항목' },
+  { to: '/internal-transfers', label: '내부대체가액' },
+  { to: '/standard-costs', label: '표준원가' },
   { to: '/allocation', label: '배부 / 마감' },
+  { to: '/analysis', label: '원가/성과 분석' },
 ]
 
 export function AppShell() {

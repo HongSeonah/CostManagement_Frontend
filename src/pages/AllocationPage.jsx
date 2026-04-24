@@ -53,6 +53,7 @@ export function AllocationPage() {
         tone: 'success',
       })
       await queryClient.invalidateQueries({ queryKey: ['allocation-summary', month] })
+      await queryClient.invalidateQueries({ queryKey: ['analysis-summary'] })
     },
     onError: (error) => {
       setMessage({ text: getApiErrorMessage(error, '월 마감에 실패했어요.'), tone: 'error' })

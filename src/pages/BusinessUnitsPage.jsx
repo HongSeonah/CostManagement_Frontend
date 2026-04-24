@@ -36,6 +36,7 @@ export function BusinessUnitsPage() {
       setSelectedId(null)
       await queryClient.invalidateQueries({ queryKey: ['business-units'] })
       await queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] })
+      await queryClient.invalidateQueries({ queryKey: ['analysis-summary'] })
     },
     onError: (error) => {
       setMessage({ text: getApiErrorMessage(error, '본부 등록에 실패했어요.'), tone: 'error' })
@@ -50,6 +51,7 @@ export function BusinessUnitsPage() {
       setSelectedId(null)
       await queryClient.invalidateQueries({ queryKey: ['business-units'] })
       await queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] })
+      await queryClient.invalidateQueries({ queryKey: ['analysis-summary'] })
       await queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
     onError: (error) => {
@@ -65,6 +67,7 @@ export function BusinessUnitsPage() {
       setSelectedId(null)
       await queryClient.invalidateQueries({ queryKey: ['business-units'] })
       await queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] })
+      await queryClient.invalidateQueries({ queryKey: ['analysis-summary'] })
       await queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
     onError: (error) => {

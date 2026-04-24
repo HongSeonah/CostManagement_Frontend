@@ -50,6 +50,7 @@ export function CostEntriesPage() {
       await queryClient.invalidateQueries({ queryKey: ['cost-entries'] })
       await queryClient.invalidateQueries({ queryKey: ['projects'] })
       await queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] })
+      await queryClient.invalidateQueries({ queryKey: ['analysis-summary'] })
     },
     onError: (error) => {
       setMessage({ text: getApiErrorMessage(error, '원가 항목 등록에 실패했어요.'), tone: 'error' })
