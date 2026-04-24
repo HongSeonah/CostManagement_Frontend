@@ -1,41 +1,26 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { clearToken } from '../lib/auth'
-import { useQuery } from '@tanstack/react-query'
-import { apiGet } from '../lib/api'
+import { NavLink, Outlet } from 'react-router-dom'
 
 const menus = [
   { to: '/dashboard', label: '대시보드' },
-  { to: '/systems', label: '시스템 정보' },
-  { to: '/interfaces', label: 'API 연동 정보' },
-  { to: '/executions', label: '실행 이력' },
-  { to: '/logs', label: '처리 기록' },
-  { to: '/schedules', label: '스케줄' },
+  { to: '/business-units', label: '본부 현황' },
+  { to: '/projects', label: '프로젝트' },
+  { to: '/cost-entries', label: '원가 항목' },
+  { to: '/allocation', label: '배부 / 마감' },
 ]
 
 export function AppShell() {
-  const navigate = useNavigate()
-
-  const { data } = useQuery({
-    queryKey: ['me'],
-    queryFn: () => apiGet('/api/auth/me'),
-  })
-
-  const handleLogout = () => {
-    clearToken()
-    navigate('/login', { replace: true })
-  }
+  const isDev = import.meta.env.DEV
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div>
-            <div className="brand">
-              <span className="brand-badge">IH</span>
-              <div>
-                <strong>InterLinkHub</strong>
-                <p>통합정보시스템</p>
-              </div>
+          <div className="brand">
+            <span className="brand-badge">CM</span>
+            <div>
+              <strong>Cost Management</strong>
             </div>
+          </div>
 
           <nav className="nav">
             {menus.map((menu) => (
@@ -50,20 +35,21 @@ export function AppShell() {
           </nav>
         </div>
 
-        <button className="logout-button" type="button" onClick={handleLogout}>
-          로그아웃
-        </button>
+        <div className="sidebar-footer">
+          <p>{isDev ? '로컬 개발 환경' : '배포 환경'}</p>
+          <small>{isDev ? '백엔드: localhost:8081' : '백엔드: /api proxy'}</small>
+        </div>
       </aside>
 
       <main className="main-panel">
         <header className="topbar">
           <div>
-            <p className="eyebrow">통합정보시스템</p>
-            <h1>업무 현황</h1>
+            <p className="eyebrow">Cost Management</p>
+            <h1>본부별 원가 운영 현황</h1>
           </div>
           <div className="user-chip">
-            <span>{data?.displayName ?? data?.username ?? '사용자'}</span>
-            <small>{data?.role ?? '사용자'}</small>
+            <span>{isDev ? '로컬 테스트' : '운영 화면'}</span>
+            <small>{isDev ? 'MySQL + IntelliJ + VSCode' : 'EC2 + Vercel'}</small>
           </div>
         </header>
 

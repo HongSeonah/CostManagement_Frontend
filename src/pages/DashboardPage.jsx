@@ -2,27 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '../lib/api'
 import { PageHeader } from '../components/PageHeader'
 import { StatCard } from '../components/StatCard'
-
-function formatNumber(value) {
-  return new Intl.NumberFormat('ko-KR').format(value ?? 0)
-}
-
-function formatExecutionStatus(value) {
-  const labels = {
-    PENDING: '대기',
-    RUNNING: '진행 중',
-    SUCCESS: '성공',
-    FAILED: '실패',
-    TIMEOUT: '시간 초과',
-    CANCELLED: '취소됨',
-    RETRYING: '재실행 중',
-  }
-  return labels[value] ?? value ?? '-'
-}
+import { formatCurrency, formatNumber } from '../lib/format'
 
 function clampPercent(value, maxValue) {
   if (!maxValue) return 0
-  return Math.max(8, Math.min(100, Math.round((value / maxValue) * 100)))
+  return Math.max(10, Math.min(100, Math.round((value / maxValue) * 100)))
 }
 
 export function DashboardPage() {
@@ -31,113 +15,129 @@ export function DashboardPage() {
     queryFn: () => apiGet('/api/dashboard/summary'),
   })
 
-  const failureQuery = useQuery({
-    queryKey: ['dashboard-failures'],
-    queryFn: () => apiGet('/api/dashboard/failures?limit=5'),
-  })
+  const summary = summaryQuery.data ?? {
+    businessUnitCount: 0,
+    projectCount: 0,
+    activeProjectCount: 0,
+    totalBudget: 0,
+    totalSpent: 0,
+    thisMonthSpent: 0,
+    thisMonthEntryCount: 0,
+    businessUnits: [],
+  }
 
-  const summary = summaryQuery.data ?? {}
-  const failures = failureQuery.data ?? []
-  const averageLatency = Number(summary.averageLatencyMillis ?? 0)
-  const maxLatency = Number(summary.maxLatencyMillis ?? 0)
-  const timeoutCount = Number(summary.todayTimeoutCount ?? 0)
-  const latencyPeak = Math.max(averageLatency, maxLatency, timeoutCount, 1)
+  const units = summary.businessUnits ?? []
+  const maxRate = Math.max(
+    1,
+    ...units.map((unit) => Number(unit.utilizationRate ?? 0)),
+  )
 
   return (
     <div className="page-stack">
       <PageHeader
-        title="업무 현황"
-        description="현재 등록된 정보와 오늘 처리 결과를 한눈에 볼 수 있는 첫 화면입니다."
+        title="대시보드"
+        description="여러 본부의 프로젝트와 원가 집행을 한 화면에서 확인하는 운영 현황입니다."
       />
 
       <section className="stats-grid">
-        <StatCard label="등록 수" value={formatNumber(summary.totalInterfaceCount)} hint="전체 개수" />
-        <StatCard label="가동 중" value={formatNumber(summary.activeInterfaceCount)} tone="mint" />
-        <StatCard label="오늘 실행" value={formatNumber(summary.todayExecutionCount)} tone="gold" />
-        <StatCard label="실패 건수" value={formatNumber(summary.todayFailureCount)} tone="rose" />
+        <StatCard label="본부 수" value={formatNumber(summary.businessUnitCount)} hint="운영 조직" />
+        <StatCard label="프로젝트 수" value={formatNumber(summary.projectCount)} tone="mint" />
+        <StatCard label="가동 프로젝트" value={formatNumber(summary.activeProjectCount)} tone="gold" />
+        <StatCard label="이번 달 원가" value={formatCurrency(summary.thisMonthSpent)} tone="rose" />
       </section>
 
       <section className="panel-grid">
         <article className="panel">
           <div className="panel-heading">
-            <h3>처리 시간</h3>
-            <span>ms</span>
+            <h3>전체 집계</h3>
+            <span>예산 / 집행 / 등록 건수</span>
           </div>
-          <div className="metric-row">
+          <div className="metric-row metric-row-wide">
             <div>
-              <p>평균</p>
-              <strong>{formatNumber(summary.averageLatencyMillis)}</strong>
-            </div>
-            <div>
-              <p>최대</p>
-              <strong>{formatNumber(summary.maxLatencyMillis)}</strong>
+              <p>총 예산</p>
+              <strong>{formatCurrency(summary.totalBudget)}</strong>
             </div>
             <div>
-              <p>시간 초과</p>
-              <strong>{formatNumber(summary.todayTimeoutCount)}</strong>
+              <p>총 집행</p>
+              <strong>{formatCurrency(summary.totalSpent)}</strong>
             </div>
-          </div>
-          <div className="latency-visual" aria-hidden="true">
-            <div className="latency-bars">
-              <div className="latency-bar-group">
-                <span className="latency-bar-label">평균</span>
-                <div className="latency-bar-track">
-                  <div className="latency-bar" style={{ height: `${clampPercent(averageLatency, latencyPeak)}%` }} />
-                </div>
-              </div>
-              <div className="latency-bar-group">
-                <span className="latency-bar-label">최대</span>
-                <div className="latency-bar-track">
-                  <div className="latency-bar" style={{ height: `${clampPercent(maxLatency, latencyPeak)}%` }} />
-                </div>
-              </div>
-              <div className="latency-bar-group">
-                <span className="latency-bar-label">초과</span>
-                <div className="latency-bar-track">
-                  <div className="latency-bar latency-bar-alert" style={{ height: `${clampPercent(timeoutCount, latencyPeak)}%` }} />
-                </div>
-              </div>
-            </div>
-            <div className="latency-note">
-              오늘 처리 시간의 상대적인 흐름을 보여줍니다.
+            <div>
+              <p>이번 달 원가 건수</p>
+              <strong>{formatNumber(summary.thisMonthEntryCount)}</strong>
             </div>
           </div>
         </article>
 
         <article className="panel">
           <div className="panel-heading">
-            <h3>최근 실패 내역</h3>
-            <span>최근 5건</span>
+            <h3>본부별 동시 수행 현황</h3>
+            <span>활성 프로젝트 기준</span>
           </div>
-          <div className="table-card">
-            <table>
-              <thead>
-                <tr>
-                  <th>연동</th>
-                  <th>상태</th>
-                  <th>오류 내용</th>
-                </tr>
-              </thead>
-              <tbody>
-                {failures.length > 0 ? (
-                  failures.map((row) => (
-                    <tr key={row.executionId}>
-                      <td>{row.interfaceName}</td>
-                      <td>{formatExecutionStatus(row.executionStatus)}</td>
-                      <td>{row.errorMessage}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="3" className="empty-state">
-                      아직 실패한 내역이 없습니다.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div className="unit-bars">
+            {units.map((unit) => (
+              <div className="unit-bar-card" key={unit.id}>
+                <div className="unit-bar-title">
+                  <strong>{unit.unitName}</strong>
+                  <span>{unit.managerName}</span>
+                </div>
+                <div className="unit-bar-track">
+                  <div
+                    className="unit-bar-fill"
+                    style={{ width: `${clampPercent(Number(unit.utilizationRate ?? 0), maxRate)}%` }}
+                  />
+                </div>
+                <div className="unit-bar-meta">
+                  <span>프로젝트 {formatNumber(unit.projectCount)}</span>
+                  <span>가동 {formatNumber(unit.activeProjectCount)}</span>
+                  <span>한도 {formatNumber(unit.activeProjectLimit)}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </article>
+      </section>
+
+      <section className="panel">
+        <div className="panel-heading">
+          <h3>본부별 요약</h3>
+          <span>프로젝트 수 / 예산 / 집행</span>
+        </div>
+        <div className="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>본부</th>
+                <th>책임자</th>
+                <th>가동 프로젝트</th>
+                <th>전체 프로젝트</th>
+                <th>예산</th>
+                <th>집행</th>
+                <th>가동률</th>
+              </tr>
+            </thead>
+            <tbody>
+              {units.length > 0 ? (
+                units.map((unit) => (
+                  <tr key={unit.id}>
+                    <td>{unit.unitName}</td>
+                    <td>{unit.managerName}</td>
+                    <td>{formatNumber(unit.activeProjectCount)}</td>
+                    <td>{formatNumber(unit.projectCount)}</td>
+                    <td>{formatCurrency(unit.totalBudget)}</td>
+                    <td>{formatCurrency(unit.totalSpent)}</td>
+                    <td>{formatNumber(unit.utilizationRate)}%</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="empty-state">
+                    등록된 본부 정보가 없습니다.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   )
