@@ -44,7 +44,7 @@ export function AllocationPage() {
     <div className="page-stack">
       <PageHeader
         title="배부 / 마감"
-        description="이번 달 원가를 직접비와 공통비로 나누고, 본부별 프로젝트 비율에 따라 배부하는 화면입니다."
+        description="이번 달 원가를 본부별로 배부하고 마감하는 화면입니다."
       />
 
       <section className="toolbar panel">
@@ -60,7 +60,6 @@ export function AllocationPage() {
         <button className="secondary-button" type="button" onClick={handleSearch}>
           조회
         </button>
-        <span className="panel-hint">직접비와 공통비를 본부별로 나눠 봅니다.</span>
       </section>
 
       {summaryQuery.isError ? (

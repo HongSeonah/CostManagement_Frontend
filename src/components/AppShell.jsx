@@ -32,11 +32,6 @@ export function AppShell() {
             ))}
           </nav>
         </div>
-
-        <div className="sidebar-footer">
-          <p>서비스 상태</p>
-          <small>API 연동 및 원가 집계</small>
-        </div>
       </aside>
 
       <main className="main-panel">
@@ -44,10 +39,6 @@ export function AppShell() {
           <div>
             <p className="eyebrow">Cost Management</p>
             <h1>본부별 원가 운영 현황</h1>
-          </div>
-          <div className="user-chip">
-            <span>실시간 현황</span>
-            <small>원가 집계 · 배부 · 마감</small>
           </div>
         </header>
 

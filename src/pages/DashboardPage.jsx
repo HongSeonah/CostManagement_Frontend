@@ -36,7 +36,7 @@ export function DashboardPage() {
     <div className="page-stack">
       <PageHeader
         title="대시보드"
-        description="여러 본부의 프로젝트와 원가 집행을 한 화면에서 확인하는 운영 현황입니다."
+        description="여러 본부의 프로젝트와 원가 집행을 한 화면에서 확인하는 화면입니다."
       />
 
       <section className="stats-grid">
