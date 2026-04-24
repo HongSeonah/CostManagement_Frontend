@@ -9,8 +9,6 @@ const menus = [
 ]
 
 export function AppShell() {
-  const isDev = import.meta.env.DEV
-
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -36,8 +34,8 @@ export function AppShell() {
         </div>
 
         <div className="sidebar-footer">
-          <p>{isDev ? '로컬 개발 환경' : '배포 환경'}</p>
-          <small>{isDev ? '백엔드: localhost:8081' : '백엔드: /api proxy'}</small>
+          <p>서비스 상태</p>
+          <small>API 연동 및 원가 집계</small>
         </div>
       </aside>
 
@@ -48,8 +46,8 @@ export function AppShell() {
             <h1>본부별 원가 운영 현황</h1>
           </div>
           <div className="user-chip">
-            <span>{isDev ? '로컬 테스트' : '운영 화면'}</span>
-            <small>{isDev ? 'MySQL + IntelliJ + VSCode' : 'EC2 + Vercel'}</small>
+            <span>실시간 현황</span>
+            <small>원가 집계 · 배부 · 마감</small>
           </div>
         </header>
 
